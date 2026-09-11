@@ -372,9 +372,9 @@ print(json.dumps(metrics, indent=2, ensure_ascii=False))
 <h2>Reprodução e origem dos arquivos</h2>
 <p>Execute os comandos abaixo na raiz do repositório com Python 3.13. O primeiro script reinicia uma única sequência com semente 42 e gera as análises na ordem do relatório. O segundo monta esta página usando os resultados calculados.</p>
 <pre><code>python -m pip install -r requirements.txt
-python ../../scripts/analyze.py
-python ../../scripts/build_report.py
-python ../../scripts/build_site.py</code></pre>
+python scripts/analyze.py
+python scripts/build_report.py
+python scripts/build_site.py</code></pre>
 <p>Bibliotecas científicas: NumPy 2.4.3, pandas 2.3.3, Matplotlib 3.10.9 e scikit-learn 1.8.0. Do scikit-learn foram usados apenas PCA e pré-processamento. A biblioteca padrão de Python é usada para arquivos, HTML e verificação de integridade.</p>
 <p>O download oficial do Kaggle respondeu HTTP 401 neste ambiente. Foi utilizada uma cópia pública de <a href="https://github.com/You-sha/Spaceship-Titanic/blob/main/train.csv">train.csv</a>, conferida byte a byte com <a href="https://github.com/AmirFARES/Kaggle-Spaceship-Titanic/blob/main/data/train.csv">um segundo espelho</a>. Ambos os arquivos são idênticos. A origem conceitual continua sendo a competição <a href="https://www.kaggle.com/competitions/spaceship-titanic/data">Spaceship Titanic</a>; não foi possível comparar os bytes com um download autenticado do Kaggle.</p>
 <p>SHA-256 do arquivo efetivamente analisado:</p><pre><code>17336d553f49ebdf6ecb266d2b5d3746e5dd308445f7c7864141c4f28d2a88d0</code></pre>

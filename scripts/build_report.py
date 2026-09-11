@@ -5,7 +5,7 @@ import html
 import pandas as pd
 
 ROOT = Path(__file__).resolve().parents[1]
-m = json.loads((ROOT/'../../results/metrics.json').read_text(encoding='utf-8'))
+m = json.loads((ROOT/'results/metrics.json').read_text(encoding='utf-8'))
 r = m['real']
 def num(x, digits=4):
     return f'{x:,.{digits}f}'.replace(',', 'X').replace('.', ',').replace('X', '.')
@@ -16,14 +16,14 @@ def table(headers, rows):
     return f'<div class="table-scroll" tabindex="0" role="region" aria-label="Tabela de resultados"><table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>'
 def figure(n, caption):
     return f'<figure id="figura-{n}"><a href="../../assets/figures/figura-{n}.png"><img src="../../assets/figures/figura-{n}.png" alt="{html.escape(caption)}" loading="lazy"></a><figcaption><strong>Figura {n}.</strong> {caption} Clique para ampliar.</figcaption></figure>'
-code=(ROOT/'../../scripts/analyze.py').read_text(encoding='utf-8')
+code=(ROOT/'scripts/analyze.py').read_text(encoding='utf-8')
 cut1=code.index('# Exercício 2 A e B')
 cut2=code.index('# Exercício 3:')
 def codeblock(text, label):
     return f'<details><summary>{label}</summary><pre><code>{html.escape(text)}</code></pre></details>'
-missing=pd.read_csv(ROOT/'../../results/faltantes.csv')
-globalstats=pd.read_csv(ROOT/'../../results/gastos-global.csv',index_col=0)
-trainstats=pd.read_csv(ROOT/'../../results/gastos-treino.csv',index_col=0)
+missing=pd.read_csv(ROOT/'results/faltantes.csv')
+globalstats=pd.read_csv(ROOT/'results/gastos-global.csv',index_col=0)
+trainstats=pd.read_csv(ROOT/'results/gastos-treino.csv',index_col=0)
 separation=table(['Par de classes','rᵢⱼ em s = 1'],[[p['par'],num(p['r'])] for p in m['separation']])
 mix=table(['s','Pontos misturados / 400','Taxa de mistura','Pares com fechos convexos sobrepostos'],
     [[s,f'{round(rate*400)} / 400',pct(rate),', '.join(m['overlap_pairs'][s]) or 'Nenhum'] for s,rate in m['mixture'].items()])
@@ -153,9 +153,9 @@ body=f'''
 <h2>Reprodução e origem dos arquivos</h2>
 <p>Execute os comandos abaixo na raiz do repositório com Python 3.13. O primeiro script reinicia uma única sequência com semente 42 e gera as análises na ordem do relatório. O segundo monta esta página usando os resultados calculados.</p>
 <pre><code>python -m pip install -r requirements.txt
-python ../../scripts/analyze.py
-python ../../scripts/build_report.py
-python ../../scripts/build_site.py</code></pre>
+python scripts/analyze.py
+python scripts/build_report.py
+python scripts/build_site.py</code></pre>
 <p>Bibliotecas científicas: NumPy 2.4.3, pandas 2.3.3, Matplotlib 3.10.9 e scikit-learn 1.8.0. Do scikit-learn foram usados apenas PCA e pré-processamento. A biblioteca padrão de Python é usada para arquivos, HTML e verificação de integridade.</p>
 <p>O download oficial do Kaggle respondeu HTTP 401 neste ambiente. Foi utilizada uma cópia pública de <a href="https://github.com/You-sha/Spaceship-Titanic/blob/main/train.csv">train.csv</a>, conferida byte a byte com <a href="https://github.com/AmirFARES/Kaggle-Spaceship-Titanic/blob/main/data/train.csv">um segundo espelho</a>. Ambos os arquivos são idênticos. A origem conceitual continua sendo a competição <a href="https://www.kaggle.com/competitions/spaceship-titanic/data">Spaceship Titanic</a>; não foi possível comparar os bytes com um download autenticado do Kaggle.</p>
 <p>SHA-256 do arquivo efetivamente analisado:</p><pre><code>{r['sha256']}</code></pre>
@@ -168,6 +168,6 @@ python ../../scripts/build_site.py</code></pre>
 {table(['#','Item','Seu valor'],[[i,*row] for i,row in enumerate(summary_rows,1)])}
 </section>
 '''
-front='---\nlayout: default\ntitle: "Preparação e análise de dados para redes neurais"\nlang: pt-BR\n---\n'
-(ROOT/'index.html').write_text(front+body,encoding='utf-8')
+front='---\nlayout: default\ntitle: "Preparação e análise de dados para redes neurais"\nlang: pt-BR\npermalink: /exercises/data/\n---\n'
+(ROOT/'index.html').write_text(front+body,encoding='utf-8',newline='\n')
 print('Relatório gerado: index.html')

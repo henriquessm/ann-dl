@@ -15,7 +15,7 @@ def table(headers, rows):
     body=''.join('<tr>'+''.join(f'<td>{html.escape(str(v))}</td>' for v in row)+'</tr>' for row in rows)
     return f'<div class="table-scroll" tabindex="0" role="region" aria-label="Tabela de resultados"><table><thead><tr>{head}</tr></thead><tbody>{body}</tbody></table></div>'
 def figure(n, caption):
-    return f'<figure id="figura-{n}"><a href="assets/figures/figura-{n}.png"><img src="assets/figures/figura-{n}.png" alt="{html.escape(caption)}" loading="lazy"></a><figcaption><strong>Figura {n}.</strong> {caption} Clique para ampliar.</figcaption></figure>'
+    return f'<figure id="figura-{n}"><a href="../../assets/figures/figura-{n}.png"><img src="../../assets/figures/figura-{n}.png" alt="{html.escape(caption)}" loading="lazy"></a><figcaption><strong>Figura {n}.</strong> {caption} Clique para ampliar.</figcaption></figure>'
 code=(ROOT/'scripts/analyze.py').read_text(encoding='utf-8')
 cut1=code.index('# Exercício 2 A e B')
 cut2=code.index('# Exercício 3:')
@@ -54,7 +54,7 @@ body=f'''
 <h1>Preparação e análise de dados para redes neurais</h1>
 <p class="lead">O espalhamento dos dados conecta três problemas: separar nuvens, reconhecer estruturas radiais e preparar entradas para a ativação tanh.</p>
 <p>Relatório computacional reproduzível. Uma única semente: <code>rng = np.random.default_rng(42)</code>. Nenhum modelo foi treinado.</p>
-<div class="downloads"><a href="scripts/analyze.py" download>Baixar código Python</a><a href="results/metrics.json">Consultar números completos</a></div>
+<div class="downloads"><a href="../../scripts/analyze.py" download>Baixar código Python</a><a href="../../results/metrics.json">Consultar números completos</a></div>
 </header>
 <section id="exercicio-1">
 <h2>Exercício 1 — Nuvens de pontos</h2>
@@ -159,7 +159,7 @@ python scripts/build_site.py</code></pre>
 <p>Bibliotecas científicas: NumPy 2.4.3, pandas 2.3.3, Matplotlib 3.10.9 e scikit-learn 1.8.0. Do scikit-learn foram usados apenas PCA e pré-processamento. A biblioteca padrão de Python é usada para arquivos, HTML e verificação de integridade.</p>
 <p>O download oficial do Kaggle respondeu HTTP 401 neste ambiente. Foi utilizada uma cópia pública de <a href="https://github.com/You-sha/Spaceship-Titanic/blob/main/train.csv">train.csv</a>, conferida byte a byte com <a href="https://github.com/AmirFARES/Kaggle-Spaceship-Titanic/blob/main/data/train.csv">um segundo espelho</a>. Ambos os arquivos são idênticos. A origem conceitual continua sendo a competição <a href="https://www.kaggle.com/competitions/spaceship-titanic/data">Spaceship Titanic</a>; não foi possível comparar os bytes com um download autenticado do Kaggle.</p>
 <p>SHA-256 do arquivo efetivamente analisado:</p><pre><code>{r['sha256']}</code></pre>
-<p><a href="results/features.npz" download>Baixar matrizes, alvos, índices e nomes de features</a> · <a href="results/faltantes.csv">Tabela de faltantes</a> · <a href="results/gastos-treino.csv">Estatísticas de gastos no treino</a> · <a href="https://github.com/henriquessm/ann-dl">Repositório público</a>.</p>
+<p><a href="../../results/features.npz" download>Baixar matrizes, alvos, índices e nomes de features</a> · <a href="../../results/faltantes.csv">Tabela de faltantes</a> · <a href="../../results/gastos-treino.csv">Estatísticas de gastos no treino</a> · <a href="https://github.com/henriquessm/ann-dl">Repositório público</a>.</p>
 <p>Colaboração com IA: apoio na implementação, visualização e redação. Resultados obtidos por execução do código disponibilizado, sem treinamento de modelos.</p>
 </section>
 <section id="resumo">
@@ -168,6 +168,6 @@ python scripts/build_site.py</code></pre>
 {table(['#','Item','Seu valor'],[[i,*row] for i,row in enumerate(summary_rows,1)])}
 </section>
 '''
-front='---\nlayout: default\ntitle: "Preparação e análise de dados para redes neurais"\nlang: pt-BR\n---\n'
-(ROOT/'index.html').write_text(front+body,encoding='utf-8')
+front='---\nlayout: default\ntitle: "Preparação e análise de dados para redes neurais"\nlang: pt-BR\npermalink: /exercises/data/\n---\n'
+(ROOT/'index.html').write_text(front+body,encoding='utf-8',newline='\n')
 print('Relatório gerado: index.html')
