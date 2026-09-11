@@ -1,0 +1,9 @@
+title: Preparação e análise de dados para redes neurais
+lang: pt-BR
+url: https://henriquessm.github.io
+baseurl: /ann-dl
+exclude:
+  - data
+  - requirements.txt
+  - README.md
+  - CHECKLIST.md

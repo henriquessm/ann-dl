@@ -1,0 +1,408 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Relatório reproduzível sobre nuvens gaussianas, PCA em 5D e preparação do Spaceship Titanic para redes neurais.">
+  <title>Preparação e análise de dados para redes neurais</title>
+  <link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+  <a class="skip" href="#conteudo">Pular para o relatório</a>
+  <aside>
+    <a class="brand" href="#conteudo">ann-dl<span>Caderno de análise</span></a>
+    <nav aria-label="Seções do relatório">
+      <a href="#exercicio-1">Exercício 1<span>Nuvens de pontos</span></a>
+      <a href="#exercicio-2">Exercício 2<span>Não linearidade em 5D</span></a>
+      <a href="#exercicio-3">Exercício 3<span>Preparação para tanh</span></a>
+      <a href="#reproducao">Reprodução e fontes</a>
+      <a href="#resumo">Resumo dos resultados</a>
+    </nav>
+    <a class="repo" href="https://github.com/henriquessm/ann-dl">Ver repositório no GitHub</a>
+  </aside>
+  <main id="conteudo">
+
+<header class="hero">
+<p class="course">Redes neurais · Análise de dados</p>
+<h1>Preparação e análise de dados para redes neurais</h1>
+<p class="lead">O espalhamento dos dados conecta três problemas: separar nuvens, reconhecer estruturas radiais e preparar entradas para a ativação tanh.</p>
+<p>Relatório computacional reproduzível. Uma única semente: <code>rng = np.random.default_rng(42)</code>. Nenhum modelo foi treinado.</p>
+<div class="downloads"><a href="scripts/analyze.py" download>Baixar código Python</a><a href="results/metrics.json">Consultar números completos</a></div>
+</header>
+<section id="exercicio-1">
+<h2>Exercício 1 — Nuvens de pontos</h2>
+<p>Abordagem: gerar gaussianas bidimensionais, aumentar seus desvios padrão e comparar uma medida de mistura com a separabilidade geométrica das amostras.</p>
+<h3>A. Geração das quatro classes</h3>
+<p>Foram geradas 400 amostras, 100 por classe. As coordenadas x e y são independentes dentro de cada classe; a covariância é diagonal, com as variâncias iguais aos quadrados dos desvios indicados.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabela de resultados"><table><thead><tr><th scope="col">Classe</th><th scope="col">Média μ</th><th scope="col">Desvio padrão σ</th><th scope="col">Amostras</th></tr></thead><tbody><tr><td>0</td><td>[2, 3]</td><td>[0,8; 2,5]</td><td>100</td></tr><tr><td>1</td><td>[5, 6]</td><td>[1,2; 1,9]</td><td>100</td></tr><tr><td>2</td><td>[8, 1]</td><td>[0,9; 0,9]</td><td>100</td></tr><tr><td>3</td><td>[15, 4]</td><td>[0,5; 2,0]</td><td>100</td></tr></tbody></table></div>
+<figure id="figura-1"><a href="assets/figures/figura-1.png"><img src="assets/figures/figura-1.png" alt="Dataset original, s = 1. As marcas X indicam as médias geradoras, não as médias amostrais. As linhas tracejadas são um esboço de fronteiras curvas usando os parâmetros conhecidos." loading="lazy"></a><figcaption><strong>Figura 1.</strong> Dataset original, s = 1. As marcas X indicam as médias geradoras, não as médias amostrais. As linhas tracejadas são um esboço de fronteiras curvas usando os parâmetros conhecidos. Clique para ampliar.</figcaption></figure>
+<h3>B. Espalhamento, separação e mistura</h3>
+<p>Além do dataset original, foram gerados quatro novos datasets, cada um com 400 pontos e as mesmas quatro classes. A sequência de sorteios é: original, s = 0,5, s = 1,0, s = 2,0 e s = 4,0. São realizações independentes: o painel s = 1 da Figura 2 não repete os pontos da Figura 1. Isso mantém o mesmo gerador aleatório e torna explícita a pequena variação amostral entre painéis.</p>
+<figure id="figura-2"><a href="assets/figures/figura-2.png"><img src="assets/figures/figura-2.png" alt="Quatro datasets com médias fixas e desvios multiplicados por s. Todos os painéis compartilham os mesmos limites de ambos os eixos." loading="lazy"></a><figcaption><strong>Figura 2.</strong> Quatro datasets com médias fixas e desvios multiplicados por s. Todos os painéis compartilham os mesmos limites de ambos os eixos. Clique para ampliar.</figcaption></figure>
+<p>A razão de separação usa os parâmetros da distribuição, não estimativas amostrais:</p>
+<div class="equation">rᵢⱼ = ‖μᵢ − μⱼ‖ / (σ̄ᵢ + σ̄ⱼ), &nbsp; σ̄ₖ = (σₖ,ₓ + σₖ,ᵧ) / 2.</div>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabela de resultados"><table><thead><tr><th scope="col">Par de classes</th><th scope="col">rᵢⱼ em s = 1</th></tr></thead><tbody><tr><td>0–1</td><td>1,3258</td></tr><tr><td>0–2</td><td>2,4802</td></tr><tr><td>0–3</td><td>4,4960</td></tr><tr><td>1–2</td><td>2,3800</td></tr><tr><td>1–3</td><td>3,6422</td></tr><tr><td>2–3</td><td>3,5422</td></tr></tbody></table></div>
+<p>O menor valor é <strong>1,3258, no par 0–1</strong>. Como rᵢⱼ(s) = rᵢⱼ(1)/s, em s = 2 esse mínimo cai para <strong>0,6629</strong>, sem necessidade de gerar novos dados. A média dos desvios resume as direções de dispersão, mas perde informação de anisotropia; portanto, r não é um teste de separabilidade.</p>
+<p>A taxa de mistura é a fração de pontos cuja média geradora mais próxima, pela distância euclidiana, pertence a outra classe. São apenas distâncias às quatro médias, calculadas com NumPy.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabela de resultados"><table><thead><tr><th scope="col">s</th><th scope="col">Pontos misturados / 400</th><th scope="col">Taxa de mistura</th><th scope="col">Pares com fechos convexos sobrepostos</th></tr></thead><tbody><tr><td>0.5</td><td>0 / 400</td><td>0,00%</td><td>Nenhum</td></tr><tr><td>1.0</td><td>27 / 400</td><td>6,75%</td><td>0–1, 1–2</td></tr><tr><td>2.0</td><td>90 / 400</td><td>22,50%</td><td>0–1, 0–2, 1–2</td></tr><tr><td>4.0</td><td>167 / 400</td><td>41,75%</td><td>0–1, 0–2, 0–3, 1–2, 1–3, 2–3</td></tr></tbody></table></div>
+<figure id="figura-3"><a href="assets/figures/figura-3.png"><img src="assets/figures/figura-3.png" alt="Taxas de mistura: 0,00%, 6,75%, 22,50% e 41,75% nas quatro escalas. A linha conecta as medições; não representa um modelo ajustado." loading="lazy"></a><figcaption><strong>Figura 3.</strong> Taxas de mistura: 0,00%, 6,75%, 22,50% e 41,75% nas quatro escalas. A linha conecta as medições; não representa um modelo ajustado. Clique para ampliar.</figcaption></figure>
+<p><strong>Entre as escalas avaliadas, a primeira perda de separação estrita por retas ocorre em s = 1.</strong> Nesse ponto, o menor r é 1,3258; ele diminui de 2,6517 em s = 0,5 para 1,3258 em s = 1. Não existe um limiar universal r = 1: a forma e as direções das nuvens também importam.</p>
+<p>Para sustentar a conclusão, calculei os fechos convexos de cada classe e verifiquei suas interseções pelo teorema dos eixos separadores. Em s = 0,5 todos os pares admitem uma reta separadora; em s = 1 os fechos dos pares 0–1 e 1–2 já se interceptam. Uma taxa de mistura positiva, sozinha, não provaria esse resultado. A localização exata da transição entre 0,5 e 1 não foi investigada.</p>
+<p>Essa conclusão se refere às amostras geradas. Gaussianas não degeneradas têm densidade positiva em todo o plano: na população, a separação perfeita já é impossível em qualquer s &gt; 0, mesmo quando uma amostra finita parece perfeitamente separada.</p>
+<h3>C. Sobreposição e fronteiras de decisão</h3>
+<p>No dataset original, as classes 0 e 1 se misturam, e há também contato entre 1 e 2; os fechos convexos desses dois pares se sobrepõem. A classe 3 fica mais isolada, enquanto a classe 2 tem formato mais compacto. Uma única reta produz dois semiplanos e não define quatro regiões distintas. Um classificador multiclasses com escores lineares pode criar várias fronteiras, mas não separar perfeitamente estes pares com fechos sobrepostos.</p>
+<p>O esboço da Figura 1 compara as log-densidades gaussianas conhecidas, com probabilidades de classe iguais: gₖ(x) = −½ Σⱼ ((xⱼ − μₖⱼ)/σₖⱼ)² − Σⱼ log σₖⱼ. Desenhei gᵢ = gⱼ apenas onde essas duas classes dominam as demais. As variâncias diferentes produzem curvas que uma rede com ativações não lineares poderia aproximar; nenhuma rede foi ajustada.</p>
+<p>Com o aumento do espalhamento, cresce a ambiguidade probabilística entre classes. Fronteiras mais flexíveis podem reduzir erros decorrentes de uma escolha linear inadequada, mas não eliminam o erro de Bayes causado por densidades sobrepostas. “Região onde a rede necessariamente erra” significa risco irredutível de errar em novas observações, não que cada ponto dessa região precise receber o rótulo errado. Uma rede também poderia memorizar uma amostra finita. Uma combinação arbitrariamente grande de retas com decisões não lineares pode fazer regiões complexas; isso é diferente de um classificador com escores lineares.</p>
+<details><summary>Código comentado — configuração e Exercício 1</summary><pre><code>&quot;&quot;&quot;Gera todas as análises e figuras, sem treinar modelos. Execute da raiz do repo.&quot;&quot;&quot;
+from pathlib import Path
+import hashlib
+import json
+import numpy as np
+import pandas as pd
+import matplotlib
+matplotlib.use(&#x27;Agg&#x27;)
+import matplotlib.pyplot as plt
+from matplotlib.lines import Line2D
+from sklearn.decomposition import PCA
+from sklearn.preprocessing import MinMaxScaler, OneHotEncoder
+
+ROOT = Path(__file__).resolve().parents[1]
+FIG = ROOT / &#x27;assets&#x27; / &#x27;figures&#x27;
+RES = ROOT / &#x27;results&#x27;
+FIG.mkdir(parents=True, exist_ok=True)
+RES.mkdir(exist_ok=True)
+# Única fonte de aleatoriedade: não reinicializar entre exercícios.
+rng = np.random.default_rng(42)
+plt.rcParams.update({&#x27;font.family&#x27;: &#x27;DejaVu Sans&#x27;, &#x27;font.size&#x27;: 10,
+                     &#x27;axes.spines.top&#x27;: False, &#x27;axes.spines.right&#x27;: False,
+                     &#x27;figure.facecolor&#x27;: &#x27;#ffffff&#x27;, &#x27;axes.facecolor&#x27;: &#x27;#ffffff&#x27;,
+                     &#x27;axes.titleweight&#x27;: &#x27;bold&#x27;, &#x27;savefig.dpi&#x27;: 160})
+COLORS = [&#x27;#176b9a&#x27;, &#x27;#dc8036&#x27;, &#x27;#7b54a5&#x27;, &#x27;#28836a&#x27;]
+metrics = {}
+
+def save(fig, number):
+    fig.savefig(FIG / f&#x27;figura-{number}.png&#x27;, bbox_inches=&#x27;tight&#x27;)
+    plt.close(fig)
+
+def scatter(ax, x, y, names, centers=None):
+    for k, name in enumerate(names):
+        pts = x[y == k]
+        ax.scatter(pts[:, 0], pts[:, 1], s=15, color=COLORS[k], alpha=.65, label=name)
+        if centers is not None:
+            ax.scatter(*centers[k], marker=&#x27;X&#x27;, s=140, color=COLORS[k], edgecolor=&#x27;black&#x27;, zorder=5)
+    ax.legend(fontsize=8)
+    ax.set(xlabel=&#x27;Feature x&#x27;, ylabel=&#x27;Feature y&#x27;)
+    ax.grid(alpha=.12)
+
+# Exercício 1 A: gaussianas independentes em x e y.
+means = np.array([[2, 3], [5, 6], [8, 1], [15, 4]], dtype=float)
+stds = np.array([[.8, 2.5], [1.2, 1.9], [.9, .9], [.5, 2.]])
+labels = np.repeat(np.arange(4), 100)
+def clouds(scale):
+    return np.vstack([rng.normal(m, scale * sd, size=(100, 2)) for m, sd in zip(means, stds)])
+
+# Teste exato até tolerância numérica: fechos convexos e eixos separadores.
+# Não ajusta classificador. Fechos convexos que se interceptam impedem separação estrita por reta.
+def hull(points):
+    p = sorted(set(map(tuple, points)))
+    def cross(o, a, b):
+        return (a[0]-o[0])*(b[1]-o[1]) - (a[1]-o[1])*(b[0]-o[0])
+    lower, upper = [], []
+    for q in p:
+        while len(lower) &gt;= 2 and cross(lower[-2], lower[-1], q) &lt;= 0:
+            lower.pop()
+        lower.append(q)
+    for q in reversed(p):
+        while len(upper) &gt;= 2 and cross(upper[-2], upper[-1], q) &lt;= 0:
+            upper.pop()
+        upper.append(q)
+    return np.array(lower[:-1] + upper[:-1])
+
+def intersect(a, b):
+    for poly in (a, b):
+        edges = np.roll(poly, -1, axis=0) - poly
+        axes = np.column_stack([-edges[:, 1], edges[:, 0]])
+        axes /= np.linalg.norm(axes, axis=1)[:, None]
+        pa, pb = a @ axes.T, b @ axes.T
+        if np.any(pa.max(axis=0) &lt; pb.min(axis=0)-1e-10) or np.any(pb.max(axis=0) &lt; pa.min(axis=0)-1e-10):
+            return False
+    return True
+
+def overlaps(x):
+    hs = [hull(x[labels == k]) for k in range(4)]
+    return [f&#x27;{i}–{j}&#x27; for i in range(4) for j in range(i+1, 4) if intersect(hs[i], hs[j])]
+
+original = clouds(1)
+metrics[&#x27;original_overlap_pairs&#x27;] = overlaps(original)
+fig, ax = plt.subplots(figsize=(10, 6))
+scatter(ax, original, labels, [f&#x27;Classe {k}&#x27; for k in range(4)], means)
+# Esboço informado pelas densidades geradoras conhecidas, com priors iguais.
+# Não é uma rede ajustada: fronteiras quadráticas ilustram decisões plausíveis.
+lo, hi = original.min(axis=0)-1, original.max(axis=0)+1
+gx, gy = np.meshgrid(np.linspace(lo[0], hi[0], 450), np.linspace(lo[1], hi[1], 450))
+grid = np.column_stack([gx.ravel(), gy.ravel()])
+scores = -.5 * (((grid[:, None, :] - means) / stds)**2).sum(axis=2) - np.log(stds).sum(axis=1)
+for i in range(4):
+    for j in range(i+1, 4):
+        # Desenhar igualdade apenas onde i e j superam as outras classes.
+        others = [k for k in range(4) if k not in (i, j)]
+        delta = scores[:, i]-scores[:, j]
+        relevant = np.maximum(scores[:, i], scores[:, j]) &gt;= scores[:, others].max(axis=1)
+        z = np.ma.masked_where(~relevant.reshape(gx.shape), delta.reshape(gx.shape))
+        if z.count() and z.min() &lt; 0 &lt; z.max():
+            ax.contour(gx, gy, z, levels=[0], colors=&#x27;#344354&#x27;, linewidths=1.2, linestyles=&#x27;--&#x27;)
+handles, names = ax.get_legend_handles_labels()
+handles += [Line2D([], [], color=&#x27;black&#x27;, marker=&#x27;X&#x27;, linestyle=&#x27;None&#x27;, label=&#x27;Médias geradoras&#x27;),
+            Line2D([], [], color=&#x27;#344354&#x27;, linestyle=&#x27;--&#x27;, label=&#x27;Esboço analítico (sem treino)&#x27;)]
+ax.legend(handles=handles, fontsize=8, loc=&#x27;upper right&#x27;)
+ax.set(title=&#x27;Figura 1 · Quatro nuvens e fronteiras plausíveis&#x27;, xlim=(lo[0], hi[0]), ylim=(lo[1], hi[1]))
+save(fig, 1)
+
+# Exercício 1 B: quatro novas realizações independentes; mesmas médias.
+scales = [.5, 1., 2., 4.]
+datasets = [clouds(s) for s in scales]
+rates = [float((np.linalg.norm(x[:, None, :] - means, axis=2).argmin(axis=1) != labels).mean()) for x in datasets]
+metrics[&#x27;mixture&#x27;] = dict(zip(map(str, scales), rates))
+metrics[&#x27;overlap_pairs&#x27;] = {str(s): overlaps(x) for s, x in zip(scales, datasets)}
+pairs = [{&#x27;par&#x27;: f&#x27;{i}–{j}&#x27;, &#x27;r&#x27;: float(np.linalg.norm(means[i]-means[j]) / (stds[i].mean()+stds[j].mean()))}
+         for i in range(4) for j in range(i+1, 4)]
+metrics[&#x27;separation&#x27;] = pairs
+fig, axs = plt.subplots(2, 2, figsize=(12, 9), sharex=True, sharey=True)
+all_points = np.vstack(datasets)
+lo, hi = all_points.min(axis=0)-1, all_points.max(axis=0)+1
+for ax, s, x, rate in zip(axs.flat, scales, datasets, rates):
+    scatter(ax, x, labels, [f&#x27;Classe {k}&#x27; for k in range(4)], means)
+    ax.set(title=f&#x27;s = {s:.1f} | mistura = {rate:.2%}&#x27;, xlim=(lo[0], hi[0]), ylim=(lo[1], hi[1]))
+fig.suptitle(&#x27;Figura 2 · O efeito do espalhamento, na mesma escala&#x27;, fontsize=15)
+fig.tight_layout()
+save(fig, 2)
+fig, ax = plt.subplots(figsize=(9, 4.7))
+ax.plot(scales, np.array(rates)*100, &#x27;o-&#x27;, color=COLORS[0], label=&#x27;Classes 0–3 (taxa agregada)&#x27;)
+for s, rate in zip(scales, rates):
+    ax.annotate(f&#x27;{rate:.2%}&#x27;, (s, rate*100), xytext=(0, 9), textcoords=&#x27;offset points&#x27;, ha=&#x27;center&#x27;)
+ax.set(title=&#x27;Figura 3 · Taxa de mistura × escala&#x27;, xlabel=&#x27;Fator de escala s&#x27;, ylabel=&#x27;Pontos com outro centro mais próximo (%)&#x27;, xticks=scales, ylim=(0, max(rates)*100+7))
+ax.legend(); ax.grid(alpha=.15)
+save(fig, 3)
+
+</code></pre></details>
+</section>
+<section id="exercicio-2">
+<h2>Exercício 2 — Não linearidade em 5D</h2>
+<p>Abordagem: comparar duas gaussianas com centros deslocados a uma estrutura de núcleo e casca. A PCA serve para visualizar; as medidas de distância e raio são calculadas nas cinco dimensões originais.</p>
+<h3>A. Dataset I: gaussianas multivariadas</h3>
+<p>Foram sorteadas 500 amostras para A e 500 para B. As médias são [0, 0, 0, 0, 0] e [1,5; 1,5; 1,5; 1,5; 1,5]. As matrizes abaixo foram usadas integralmente, e seus autovalores foram verificados como positivos.</p>
+<div class="matrix-pair"><pre aria-label="Covariância da classe A">ΣA = [1,0  0,8  0,1  0,0  0,0
+      0,8  1,0  0,3  0,0  0,0
+      0,1  0,3  1,0  0,5  0,0
+      0,0  0,0  0,5  1,0  0,2
+      0,0  0,0  0,0  0,2  1,0]</pre>
+<pre aria-label="Covariância da classe B">ΣB = [ 1,5 −0,7  0,2  0,0  0,0
+      −0,7  1,5  0,4  0,0  0,0
+       0,2  0,4  1,5  0,6  0,0
+       0,0  0,0  0,6  1,5  0,3
+       0,0  0,0  0,0  0,3  1,5]</pre></div>
+<p>A tem correlação 0,8 entre as duas primeiras features; em B, a correlação é −0,7/1,5 ≈ −0,4667. As variâncias de B são maiores. Isso altera a orientação e o tamanho das nuvens, além do deslocamento entre centros.</p>
+<h3>B. Dataset II: núcleo e casca</h3>
+<p>Para cada ponto, sorteei v ∼ N(0, I₅) e normalizei u = v/‖v‖, obtendo direções uniformes na esfera unitária em ℝ⁵. Os raios são independentes das direções: ρC ∼ N(2; 0,4²) e ρD ∼ N(5; 0,4²). Cada ponto é x = ρu. Foram gerados 500 pontos por classe e todos os raios sorteados foram positivos nesta execução.</p>
+<h3>C. PCA e medidas geométricas</h3>
+<p>Usei PCA separada para cada dataset, com centralização e SVD completa, sem padronizar as features. As dimensões sintéticas têm a mesma unidade, e preservar suas variâncias faz parte da comparação. A PCA procura direções de maior variância e não usa os rótulos para escolher os componentes. <a href="https://scikit-learn.org/stable/modules/generated/sklearn.decomposition.PCA.html">Referência: PCA do scikit-learn.</a></p>
+<figure id="figura-4"><a href="assets/figures/figura-4.png"><img src="assets/figures/figura-4.png" alt="Projeções dos dois datasets. Os painéis usam escalas iguais e proporção visual comparável; os eixos PCA são calculados independentemente e não representam as mesmas direções entre datasets." loading="lazy"></a><figcaption><strong>Figura 4.</strong> Projeções dos dois datasets. Os painéis usam escalas iguais e proporção visual comparável; os eixos PCA são calculados independentemente e não representam as mesmas direções entre datasets. Clique para ampliar.</figcaption></figure>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabela de resultados"><table><thead><tr><th scope="col">Dataset</th><th scope="col">Distância entre centros amostrais (5D)</th><th scope="col">PC1</th><th scope="col">PC2</th><th scope="col">PC1 + PC2</th></tr></thead><tbody><tr><td>I</td><td>3,3316</td><td>51,32%</td><td>15,98%</td><td>67,30%</td></tr><tr><td>II</td><td>0,2347</td><td>21,64%</td><td>21,47%</td><td>43,10%</td></tr></tbody></table></div>
+<p>Os dois primeiros componentes explicam <strong>67,30% no Dataset I</strong> e <strong>43,10% no Dataset II</strong>. A projeção preserva melhor a informação discriminativa aparente do Dataset I, cujo deslocamento entre centros contribui para a variância. No Dataset II, a informação de raio se distribui por cinco direções: eliminar três delas pode projetar pontos da casca sobre o núcleo. Variância explicada não é uma medida de acurácia.</p>
+<p>As distâncias entre <em>centros amostrais</em> são <strong>3,3316</strong> e <strong>0,2347</strong>. Para comparação, as distâncias entre médias populacionais são √(5 × 1,5²) = 3,3541 e zero, respectivamente. A pequena distância amostral do Dataset II decorre da flutuação dos sorteios.</p>
+<figure id="figura-5"><a href="assets/figures/figura-5.png"><img src="assets/figures/figura-5.png" alt="Histogramas de ‖x‖ em 5D, com bins comuns às duas classes de cada dataset. As distâncias são à origem, não aos centros estimados nem aos eixos da PCA." loading="lazy"></a><figcaption><strong>Figura 5.</strong> Histogramas de ‖x‖ em 5D, com bins comuns às duas classes de cada dataset. As distâncias são à origem, não aos centros estimados nem aos eixos da PCA. Clique para ampliar.</figcaption></figure>
+<p>No Dataset I, os raios de A variam de 0,4228 a 4,7968, e os de B de 1,2625 a 7,5007: os intervalos se sobrepõem. No Dataset II, C varia de 0,8501 a 3,6605, e D de 3,9533 a 6,0205. Há um intervalo livre entre os raios das duas classes nesta amostra.</p>
+<h3>D. O que uma fronteira linear não resolve</h3>
+<p>Centros praticamente coincidentes e raios separados indicam que a classe depende da distância à origem, e não de uma direção privilegiada. Um hiperplano wᵀx + b = 0 corta o espaço em dois lados. Como a casca ocupa todas as direções ao redor do núcleo, deslocar ou girar esse plano não coloca todo o núcleo de um lado e toda a casca do outro. No caso ideal de cascas simétricas, se os pontos externos x e −x ficam no mesmo semiespaço convexo, seu ponto médio, a origem, também fica nele. Coletar mais dados não muda essa estrutura.</p>
+<p>Uma projeção 2D misturada <strong>não prova inseparabilidade em 5D</strong>, pois pode descartar direções ou combinações relevantes. Neste próprio Dataset II, a projeção perde a distinção clara que existe nos raios originais. Uma função não linear simples é q(x) = Σᵢ₌₁⁵ xᵢ². A regra “C se q(x) &lt; 14,44; D caso contrário”, equivalente a raio 3,8, separa os 1.000 pontos desta realização, com <strong>zero erros</strong>.</p>
+<p>O limiar 3,8 foi escolhido para ilustrar o intervalo observado entre o maior raio de C (3,6605) e o menor de D (3,9533); não representa desempenho em teste independente. O ponto médio teórico das médias dos raios, 3,5, dá 1 erro em 1.000 pontos. Como os raios são gaussianos, as distribuições têm caudas sobrepostas e nem uma regra radial garante erro populacional zero.</p>
+<p>Uma transformação linear seguida de outra linear continua sendo linear. Redes com ativações não lineares podem aproximar a função radial; profundidade não é condição necessária para representar toda fronteira não linear, e não remove a ambiguidade probabilística dos dados.</p>
+<details><summary>Código comentado — Exercício 2 (continuação)</summary><pre><code># Exercício 2 A e B: gerar em 5D, preservar as distâncias no espaço original.
+cov_a = np.array([[1,.8,.1,0,0],[.8,1,.3,0,0],[.1,.3,1,.5,0],[0,0,.5,1,.2],[0,0,0,.2,1]])
+cov_b = np.array([[1.5,-.7,.2,0,0],[-.7,1.5,.4,0,0],[.2,.4,1.5,.6,0],[0,0,.6,1.5,.3],[0,0,0,.3,1.5]])
+assert np.linalg.eigvalsh(cov_a).min() &gt; 0 and np.linalg.eigvalsh(cov_b).min() &gt; 0
+xa = rng.multivariate_normal(np.zeros(5), cov_a, 500)
+xb = rng.multivariate_normal(np.full(5, 1.5), cov_b, 500)
+def radial(mu):
+    directions = rng.normal(size=(500, 5))
+    directions /= np.linalg.norm(directions, axis=1, keepdims=True)
+    radii = rng.normal(mu, .4, size=500)
+    assert (radii &gt; 0).all()  # Nesta realização, raio gaussiano positivo em todos os pontos.
+    return directions * radii[:, None]
+xc, xd = radial(2), radial(5)
+yl = np.repeat([0, 1], 500)
+fig4, axs4 = plt.subplots(1, 2, figsize=(12, 5))
+fig5, axs5 = plt.subplots(1, 2, figsize=(12, 4.7))
+for idx, (a, b, names) in enumerate([(xa, xb, [&#x27;Classe A&#x27;, &#x27;Classe B&#x27;]), (xc, xd, [&#x27;Classe C&#x27;, &#x27;Classe D&#x27;])]):
+    x = np.vstack([a, b])
+    pca = PCA(n_components=2, svd_solver=&#x27;full&#x27;)  # SVD determinística; sem outro RNG.
+    proj = pca.fit_transform(x)
+    ev = pca.explained_variance_ratio_
+    radii = [np.linalg.norm(z, axis=1) for z in (a, b)]
+    metrics[f&#x27;dataset_{idx+1}&#x27;] = {&#x27;center_distance&#x27;: float(np.linalg.norm(a.mean(axis=0)-b.mean(axis=0))),
+        &#x27;explained_variance&#x27;: ev.tolist(), &#x27;radius_ranges&#x27;: [[float(r.min()),float(r.max())] for r in radii]}
+    scatter(axs4[idx], proj, yl, names)
+    axs4[idx].set(title=f&#x27;Dataset {&quot;I&quot; if idx == 0 else &quot;II&quot;} | PC1 + PC2 = {ev.sum():.2%}&#x27;, xlabel=f&#x27;PC1 ({ev[0]:.2%})&#x27;, ylabel=f&#x27;PC2 ({ev[1]:.2%})&#x27;, xlim=(-7,7), ylim=(-7,7))
+    bins = np.linspace(0, max(r.max() for r in radii)+.1, 35)
+    for k, r in enumerate(radii):
+        axs5[idx].hist(r, bins=bins, alpha=.6, color=COLORS[k], label=names[k], edgecolor=&#x27;white&#x27;, linewidth=.3)
+    axs5[idx].set(title=f&#x27;Dataset {&quot;I&quot; if idx == 0 else &quot;II&quot;} · raios em 5D&#x27;, xlabel=&#x27;Raio ‖x‖ no espaço original&#x27;, ylabel=&#x27;Número de pontos&#x27;)
+    axs5[idx].legend()
+fig4.suptitle(&#x27;Figura 4 · Projeções PCA em duas dimensões&#x27;, fontsize=15)
+fig4.tight_layout(); save(fig4, 4)
+fig5.suptitle(&#x27;Figura 5 · Distâncias à origem, por classe&#x27;, fontsize=15)
+fig5.tight_layout(); save(fig5, 5)
+metrics[&#x27;radial_rule_errors&#x27;] = int((np.linalg.norm(xc,axis=1) &gt;= 3.5).sum() + (np.linalg.norm(xd,axis=1) &lt; 3.5).sum())
+metrics[&#x27;radial_rule_3_8_errors&#x27;] = int((np.linalg.norm(xc,axis=1) &gt;= 3.8).sum() + (np.linalg.norm(xd,axis=1) &lt; 3.8).sum())
+
+</code></pre></details>
+</section>
+<section id="exercicio-3">
+<h2>Exercício 3 — Dados reais e preparação para tanh</h2>
+<p>Abordagem: inspecionar o train.csv do Spaceship Titanic, reservar teste estratificado e ajustar as transformações somente no treino. O arquivo test.csv da competição não foi usado.</p>
+<h3>A. Objetivo, tipos e diagnóstico dos dados</h3>
+<p>A coluna <code>Transported</code> indica se um passageiro foi transportado para outra dimensão no cenário fictício da competição. O objetivo preditivo seria estimar esse evento a partir dos registros dos passageiros. Aqui apenas preparo as entradas, sem treinar classificadores. <a href="https://www.kaggle.com/competitions/spaceship-titanic/data">Fonte: descrição do dataset no Kaggle.</a></p>
+<p>O arquivo contém <strong>8.693 linhas e 14 colunas</strong>. São <strong>4.378 positivos (50,36%)</strong> e <strong>4.315 negativos (49,64%)</strong>: as classes estão praticamente balanceadas.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabela de resultados"><table><thead><tr><th scope="col">Tipo</th><th scope="col">Colunas</th></tr></thead><tbody><tr><td>Numéricas</td><td>Age, RoomService, FoodCourt, ShoppingMall, Spa, VRDeck</td></tr><tr><td>Categóricas usadas</td><td>HomePlanet, CryoSleep, Destination, VIP</td></tr><tr><td>Identificadores / textos descartados</td><td>PassengerId, Cabin, Name</td></tr><tr><td>Alvo binário (não é feature)</td><td>Transported</td></tr></tbody></table></div>
+<p>CryoSleep e VIP são indicadores booleanos tratados como categorias; Cabin é uma categoria composta, Name é texto e PassengerId é um identificador. As três últimas colunas de entrada serão descartadas conforme solicitado.</p>
+<p>Valores faltantes no arquivo completo; o denominador de cada percentual é 8.693:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabela de resultados"><table><thead><tr><th scope="col">Coluna</th><th scope="col">Faltantes</th><th scope="col">Percentual</th></tr></thead><tbody><tr><td>PassengerId</td><td>0</td><td>0,00%</td></tr><tr><td>HomePlanet</td><td>201</td><td>2,31%</td></tr><tr><td>CryoSleep</td><td>217</td><td>2,50%</td></tr><tr><td>Cabin</td><td>199</td><td>2,29%</td></tr><tr><td>Destination</td><td>182</td><td>2,09%</td></tr><tr><td>Age</td><td>179</td><td>2,06%</td></tr><tr><td>VIP</td><td>203</td><td>2,34%</td></tr><tr><td>RoomService</td><td>181</td><td>2,08%</td></tr><tr><td>FoodCourt</td><td>183</td><td>2,11%</td></tr><tr><td>ShoppingMall</td><td>208</td><td>2,39%</td></tr><tr><td>Spa</td><td>183</td><td>2,11%</td></tr><tr><td>VRDeck</td><td>188</td><td>2,16%</td></tr><tr><td>Name</td><td>200</td><td>2,30%</td></tr><tr><td>Transported</td><td>0</td><td>0,00%</td></tr></tbody></table></div>
+<p>Estatísticas dos gastos no arquivo completo, ignorando ausentes apenas para calcular estes resumos:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabela de resultados"><table><thead><tr><th scope="col">Coluna</th><th scope="col">Média</th><th scope="col">Mediana</th><th scope="col">Máximo</th></tr></thead><tbody><tr><td>RoomService</td><td>224,69</td><td>0,00</td><td>14.327,00</td></tr><tr><td>FoodCourt</td><td>458,08</td><td>0,00</td><td>29.813,00</td></tr><tr><td>ShoppingMall</td><td>173,73</td><td>0,00</td><td>23.492,00</td></tr><tr><td>Spa</td><td>311,14</td><td>0,00</td><td>22.408,00</td></tr><tr><td>VRDeck</td><td>304,85</td><td>0,00</td><td>24.133,00</td></tr></tbody></table></div>
+<p>As medianas dos cinco gastos são zero, enquanto as médias são positivas e os máximos são muito maiores. Isso indica concentração em zero e caudas longas à direita: poucos passageiros gastam muito e deslocam a média. Um valor extremo não é, por si só, um erro de registro; por isso, os gastos altos não foram excluídos.</p>
+<h3>B. Separação antes das transformações</h3>
+<p>O split foi implementado com permutações estratificadas em NumPy usando o mesmo rng da atividade. Em cada classe, reservei round(20% × n) observações para teste e depois embaralhei cada partição. O resultado foi <strong>6.954 linhas de treino e 1.739 de teste</strong>, com índices disjuntos e todas as linhas originais preservadas.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabela de resultados"><table><thead><tr><th scope="col">Partição</th><th scope="col">False</th><th scope="col">True</th><th scope="col">Total</th><th scope="col">Proporção positiva</th></tr></thead><tbody><tr><td>Treino</td><td>3452</td><td>3502</td><td>6954</td><td>50,36%</td></tr><tr><td>Teste</td><td>863</td><td>876</td><td>1739</td><td>50,37%</td></tr></tbody></table></div>
+<p>A separação ocorre antes de calcular qualquer estatística usada nas transformações, para que o teste represente observações não vistas. Imputar ou escalar usando o arquivo inteiro transferiria informações da distribuição do teste para o treino. Os resumos globais do item A são apenas descritivos e não alimentam imputação, categorias ou limites de escala.</p>
+<p>Estatísticas de gastos <strong>somente no treino, antes de imputar e transformar</strong>:</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabela de resultados"><table><thead><tr><th scope="col">Coluna</th><th scope="col">Média</th><th scope="col">Mediana</th><th scope="col">Máximo</th></tr></thead><tbody><tr><td>RoomService</td><td>226,12</td><td>0,00</td><td>9.920,00</td></tr><tr><td>FoodCourt</td><td>445,99</td><td>0,00</td><td>29.813,00</td></tr><tr><td>ShoppingMall</td><td>177,95</td><td>0,00</td><td>23.492,00</td></tr><tr><td>Spa</td><td>301,97</td><td>0,00</td><td>22.408,00</td></tr><tr><td>VRDeck</td><td>306,17</td><td>0,00</td><td>24.133,00</td></tr></tbody></table></div>
+<p>Em particular, FoodCourt no treino tem <strong>média 445,9940, mediana 0,00 e máximo 29.813,00</strong>. A diferença entre média e mediana confirma a assimetria também na partição usada para ajustar o pré-processamento.</p>
+<h3>C. Imputação, engenharia e escalonamento</h3>
+<p><strong>Numéricas.</strong> Preenchi os ausentes com a mediana de cada coluna calculada no treino: Age = 27 e as cinco colunas de gasto = 0. A mediana é menos sensível à cauda longa que a média. Aplicar as mesmas medianas no teste evita vazamento. Imputar gasto zero é uma aproximação que não distingue “não gastou” de “gasto desconhecido”; foi escolhida pela concentração em zero e deve ser reavaliada em um projeto de modelagem.</p>
+<p><strong>Categóricas.</strong> Os ausentes recebem o rótulo fixo “Ausente”, sem estimar frequências no teste. HomePlanet, CryoSleep, Destination e VIP passam por one-hot, com categorias aprendidas exclusivamente no treino. Uma categoria inédita no teste é representada por zeros no bloco correspondente, devido a <code>handle_unknown='ignore'</code>; ela não é confundida com o rótulo explícito “Ausente”. Essa situação foi verificada com uma categoria fictícia em uma cópia de uma linha, sem alterar as matrizes finais. <a href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.OneHotEncoder.html">Referência: OneHotEncoder.</a></p>
+<p><strong>TotalSpend.</strong> Após imputar os gastos, somei RoomService + FoodCourt + ShoppingMall + Spa + VRDeck na escala monetária original. Em seguida, apliquei log(1 + x) aos cinco gastos e a TotalSpend. Somar depois do log produziria outra grandeza. Cabin, Name e PassengerId não entram nas features, e Transported fica separado como alvo inteiro 0/1.</p>
+<p><strong>Caudas.</strong> log(1 + x) preserva zero e a ordem dos valores, mas comprime a distância entre gastos muito elevados. Assim, valores extremos dominam menos a escala e a soma ponderada que chega à tanh. Isso reduz uma possível fonte de saturação e gradientes pequenos; não garante ausência de saturação, pois pesos e vieses também influenciam a ativação.</p>
+<p><strong>Escala.</strong> Escolhi MinMax em [−1, 1], ajustado somente nas sete colunas numéricas do treino. A fórmula é z = 2(x − mínₜᵣₑᵢₙₒ)/(máxₜᵣₑᵢₙₒ − mínₜᵣₑᵢₙₒ) − 1. Os indicadores one-hot permanecem em 0/1, que também está dentro do intervalo. Uma entrada em [−1, 1] é uma escolha conveniente, não uma exigência matemática da função tanh. <a href="https://scikit-learn.org/stable/modules/generated/sklearn.preprocessing.MinMaxScaler.html">Referência: MinMaxScaler.</a></p>
+<p>Usei <code>clip=True</code> para manter valores de teste além dos extremos do treino dentro do intervalo. Houve <strong>1 valor em 1 passageiro</strong> limitado, na coluna RoomService. Isso não recalcula os limites com o teste, mas perde a informação de quanto o extremo excedeu o máximo de treino.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabela de resultados"><table><thead><tr><th scope="col">Feature numérica</th><th scope="col">Mín. treino</th><th scope="col">Máx. treino</th><th scope="col">Mín. teste</th><th scope="col">Máx. teste</th></tr></thead><tbody><tr><td>Age</td><td>-1,0000</td><td>1,0000</td><td>-1,0000</td><td>0,9747</td></tr><tr><td>RoomService</td><td>-1,0000</td><td>1,0000</td><td>-1,0000</td><td>1,0000</td></tr><tr><td>FoodCourt</td><td>-1,0000</td><td>1,0000</td><td>-1,0000</td><td>0,9859</td></tr><tr><td>ShoppingMall</td><td>-1,0000</td><td>1,0000</td><td>-1,0000</td><td>0,8707</td></tr><tr><td>Spa</td><td>-1,0000</td><td>1,0000</td><td>-1,0000</td><td>0,9345</td></tr><tr><td>VRDeck</td><td>-1,0000</td><td>1,0000</td><td>-1,0000</td><td>0,9341</td></tr><tr><td>TotalSpend</td><td>-1,0000</td><td>1,0000</td><td>-1,0000</td><td>0,9720</td></tr></tbody></table></div>
+<h3>D. Visualização, checagens e reflexão</h3>
+<figure id="figura-6"><a href="assets/figures/figura-6.png"><img src="assets/figures/figura-6.png" alt="FoodCourt somente no treino: antes, após imputação e log(1 + x), e após escalonamento. Os ausentes não entram no primeiro histograma; os demais incluem todas as linhas após imputação. A concentração em zero permanece, enquanto a cauda é comprimida." loading="lazy"></a><figcaption><strong>Figura 6.</strong> FoodCourt somente no treino: antes, após imputação e log(1 + x), e após escalonamento. Os ausentes não entram no primeiro histograma; os demais incluem todas as linhas após imputação. A concentração em zero permanece, enquanto a cauda é comprimida. Clique para ampliar.</figcaption></figure>
+<p>As checagens finais encontraram <strong>0 NaN no treino e 0 NaN no teste</strong>, e nenhum valor infinito. As matrizes de features têm shapes <strong>(6.954, 21)</strong> e <strong>(1.739, 21)</strong>, respectivamente: sete numéricas e 14 indicadores categóricos. O mínimo e o máximo são <strong>−1,0000 e 1,0000 no treino</strong> e <strong>−1,0000 e 1,0000 no teste</strong>. As matrizes estão, portanto, em uma escala compatível com a proposta de uso da tanh.</p>
+<p>As escolhas com maior potencial de afetar o treinamento são a transformação dos gastos e a escala das entradas, pois modificam a influência dos extremos e a faixa das pré-ativações. A imputação também importa: substituir ausências por zero pode ocultar diferenças entre desconhecimento e ausência real de consumo. One-hot evita inventar uma ordem entre planetas ou destinos, enquanto TotalSpend explicita intensidade total de consumo, embora seja redundante com os gastos originais. O split anterior ao ajuste torna uma futura avaliação mais confiável; nenhuma dessas escolhas foi validada por desempenho preditivo nesta atividade.</p>
+<details><summary>Código comentado — Exercício 3 e exportação dos resultados (continuação)</summary><pre><code># Exercício 3: único arquivo com rótulos; verificar integridade e separar ANTES das estatísticas.
+data_path = ROOT / &#x27;data/train.csv&#x27;
+assert hashlib.sha256(data_path.read_bytes()).hexdigest() == &#x27;17336d553f49ebdf6ecb266d2b5d3746e5dd308445f7c7864141c4f28d2a88d0&#x27;, &#x27;O arquivo de entrada difere da cópia verificada.&#x27;
+df = pd.read_csv(data_path)
+assert df.shape == (8693, 14) and df.PassengerId.is_unique
+assert not df.Transported.isna().any()
+y = df.Transported.astype(int)
+spend = [&#x27;RoomService&#x27;, &#x27;FoodCourt&#x27;, &#x27;ShoppingMall&#x27;, &#x27;Spa&#x27;, &#x27;VRDeck&#x27;]
+numeric = [&#x27;Age&#x27;] + spend
+categorical = [&#x27;HomePlanet&#x27;, &#x27;CryoSleep&#x27;, &#x27;Destination&#x27;, &#x27;VIP&#x27;]
+# Split estratificado com o MESMO rng: permutar cada classe e reservar ~20%.
+train_idx, test_idx = [], []
+for c in (0, 1):
+    ids = rng.permutation(np.flatnonzero(y.to_numpy() == c))
+    ntest = round(.2 * len(ids))
+    test_idx.extend(ids[:ntest]); train_idx.extend(ids[ntest:])
+train_idx = rng.permutation(train_idx); test_idx = rng.permutation(test_idx)
+train, test = df.iloc[train_idx].copy(), df.iloc[test_idx].copy()
+assert len(set(train_idx) &amp; set(test_idx)) == 0
+assert len(train) + len(test) == len(df)
+
+# Estatísticas descritivas globais são reportadas, mas nunca entram no pipeline.
+missing = pd.DataFrame({&#x27;Coluna&#x27;: df.columns, &#x27;Faltantes&#x27;: df.isna().sum().values, &#x27;Percentual&#x27;: df.isna().mean().values*100})
+missing.to_csv(RES / &#x27;faltantes.csv&#x27;, index=False)
+stats_all = df[spend].agg([&#x27;mean&#x27;,&#x27;median&#x27;,&#x27;max&#x27;]).T
+stats_train = train[spend].agg([&#x27;mean&#x27;,&#x27;median&#x27;,&#x27;max&#x27;]).T
+stats_all.to_csv(RES / &#x27;gastos-global.csv&#x27;)
+stats_train.to_csv(RES / &#x27;gastos-treino.csv&#x27;)
+
+# Numéricas: medianas calculadas SÓ no treino, robustas à cauda longa.
+medians = train[numeric].median()
+num_train, num_test = train[numeric].fillna(medians), test[numeric].fillna(medians)
+# TotalSpend é soma monetária DEPOIS da imputação, ANTES de log1p.
+for frame in (num_train, num_test):
+    frame[&#x27;TotalSpend&#x27;] = frame[spend].sum(axis=1)
+    frame[spend + [&#x27;TotalSpend&#x27;]] = np.log1p(frame[spend + [&#x27;TotalSpend&#x27;]])
+
+# Categóricas: rótulo explícito para ausentes; a ausência pode ser informativa.
+# Categorias inéditas recebem vetor zero no bloco correspondente.
+cat_train = train[categorical].astype(&#x27;string&#x27;).fillna(&#x27;Ausente&#x27;)
+cat_test = test[categorical].astype(&#x27;string&#x27;).fillna(&#x27;Ausente&#x27;)
+encoder = OneHotEncoder(handle_unknown=&#x27;ignore&#x27;, sparse_output=False, dtype=np.float64)
+encoded_train = encoder.fit_transform(cat_train)
+encoded_test = encoder.transform(cat_test)
+
+# MinMax ajustado só no treino. Clip controla valores de teste fora dos extremos observados.
+scaler = MinMaxScaler(feature_range=(-1, 1), clip=True)
+scaled_train = scaler.fit_transform(num_train)
+outside = (num_test.to_numpy() &lt; scaler.data_min_) | (num_test.to_numpy() &gt; scaler.data_max_)
+scaled_test = scaler.transform(num_test)
+feature_names = list(num_train.columns) + encoder.get_feature_names_out(categorical).tolist()
+X_train = np.column_stack([scaled_train, encoded_train])
+X_test = np.column_stack([scaled_test, encoded_test])
+assert np.isfinite(X_train).all() and np.isfinite(X_test).all()
+assert X_train.min() &gt;= -1-1e-12 and X_train.max() &lt;= 1+1e-12
+assert X_test.min() &gt;= -1-1e-12 and X_test.max() &lt;= 1+1e-12
+unknown_probe = cat_test.iloc[:1].copy()
+unknown_probe.loc[:, &#x27;HomePlanet&#x27;] = &#x27;Planeta_nunca_visto&#x27;
+assert encoder.transform(unknown_probe)[0, :len(encoder.categories_[0])].sum() == 0
+np.savez_compressed(RES / &#x27;features.npz&#x27;, X_train=X_train, X_test=X_test,
+    y_train=y.iloc[train_idx].to_numpy(), y_test=y.iloc[test_idx].to_numpy(),
+    train_index=train_idx, test_index=test_idx, feature_names=np.array(feature_names))
+metrics[&#x27;real&#x27;] = {&#x27;sha256&#x27;: hashlib.sha256(data_path.read_bytes()).hexdigest(),
+    &#x27;n&#x27;: len(df), &#x27;positive&#x27;: int(y.sum()), &#x27;negative&#x27;: int((1-y).sum()), &#x27;positive_fraction&#x27;: float(y.mean()),
+    &#x27;train_positive&#x27;: int(train.Transported.sum()), &#x27;test_positive&#x27;: int(test.Transported.sum()),
+    &#x27;foodcourt_train&#x27;: stats_train.loc[&#x27;FoodCourt&#x27;].to_dict(),
+    &#x27;shape_train&#x27;: list(X_train.shape), &#x27;shape_test&#x27;: list(X_test.shape),
+    &#x27;range_train&#x27;: [float(X_train.min()),float(X_train.max())], &#x27;range_test&#x27;:[float(X_test.min()),float(X_test.max())],
+    &#x27;nan_train&#x27;: int(np.isnan(X_train).sum()), &#x27;nan_test&#x27;:int(np.isnan(X_test).sum()),
+    &#x27;clip_cells&#x27;: int(outside.sum()), &#x27;clip_rows&#x27;:int(outside.any(axis=1).sum()),
+    &#x27;clip_by_feature&#x27;:dict(zip(num_train.columns, outside.sum(axis=0).tolist())),
+    &#x27;medians&#x27;:medians.to_dict(), &#x27;features&#x27;:feature_names,
+    &#x27;categories&#x27;: {c:v.tolist() for c,v in zip(categorical,encoder.categories_)},
+    &#x27;numeric_ranges&#x27;: {c:{&#x27;train_min&#x27;:float(scaled_train[:,i].min()),&#x27;train_max&#x27;:float(scaled_train[:,i].max()),
+        &#x27;test_min&#x27;:float(scaled_test[:,i].min()),&#x27;test_max&#x27;:float(scaled_test[:,i].max())} for i,c in enumerate(num_train.columns)}}
+
+# Figura 6: três etapas, cada uma com as classes do treino sobrepostas.
+fig, axs = plt.subplots(1, 3, figsize=(14, 4.7))
+ys = train.Transported.to_numpy(dtype=int)
+values = [train.FoodCourt.to_numpy(), num_train.FoodCourt.to_numpy(), scaled_train[:, list(num_train.columns).index(&#x27;FoodCourt&#x27;)]]
+titles = [&#x27;Antes: valores observados&#x27;, &#x27;Após imputação + log(1 + x)&#x27;, &#x27;Após MinMax em [−1, 1]&#x27;]
+xlabels = [&#x27;Gasto FoodCourt (unidade do dataset)&#x27;, &#x27;log(1 + FoodCourt)&#x27;, &#x27;FoodCourt escalonado&#x27;]
+for ax, vals, title, xlabel in zip(axs, values, titles, xlabels):
+    bins = np.linspace(np.nanmin(vals), np.nanmax(vals), 36)
+    for k in (0, 1):
+        subset = vals[ys == k]; subset = subset[np.isfinite(subset)]
+        ax.hist(subset, bins=bins, alpha=.6, color=COLORS[k], label=f&#x27;Transported = {bool(k)}&#x27;)
+    ax.set(title=title, xlabel=xlabel, ylabel=&#x27;Número de passageiros (treino)&#x27;)
+    ax.legend(fontsize=8)
+axs[-1].set_xticks([-1, -.5, 0, .5, 1])
+fig.suptitle(&#x27;Figura 6 · FoodCourt: cauda pesada e transformação&#x27;, fontsize=15)
+fig.tight_layout(); save(fig, 6)
+(RES / &#x27;metrics.json&#x27;).write_text(json.dumps(metrics, indent=2, ensure_ascii=False), encoding=&#x27;utf-8&#x27;)
+print(json.dumps(metrics, indent=2, ensure_ascii=False))
+</code></pre></details>
+</section>
+<section id="reproducao">
+<h2>Reprodução e origem dos arquivos</h2>
+<p>Execute os comandos abaixo na raiz do repositório com Python 3.13. O primeiro script reinicia uma única sequência com semente 42 e gera as análises na ordem do relatório. O segundo monta esta página usando os resultados calculados.</p>
+<pre><code>python -m pip install -r requirements.txt
+python scripts/analyze.py
+python scripts/build_report.py
+python scripts/build_site.py</code></pre>
+<p>Bibliotecas científicas: NumPy 2.4.3, pandas 2.3.3, Matplotlib 3.10.9 e scikit-learn 1.8.0. Do scikit-learn foram usados apenas PCA e pré-processamento. A biblioteca padrão de Python é usada para arquivos, HTML e verificação de integridade.</p>
+<p>O download oficial do Kaggle respondeu HTTP 401 neste ambiente. Foi utilizada uma cópia pública de <a href="https://github.com/You-sha/Spaceship-Titanic/blob/main/train.csv">train.csv</a>, conferida byte a byte com <a href="https://github.com/AmirFARES/Kaggle-Spaceship-Titanic/blob/main/data/train.csv">um segundo espelho</a>. Ambos os arquivos são idênticos. A origem conceitual continua sendo a competição <a href="https://www.kaggle.com/competitions/spaceship-titanic/data">Spaceship Titanic</a>; não foi possível comparar os bytes com um download autenticado do Kaggle.</p>
+<p>SHA-256 do arquivo efetivamente analisado:</p><pre><code>17336d553f49ebdf6ecb266d2b5d3746e5dd308445f7c7864141c4f28d2a88d0</code></pre>
+<p><a href="results/features.npz" download>Baixar matrizes, alvos, índices e nomes de features</a> · <a href="results/faltantes.csv">Tabela de faltantes</a> · <a href="results/gastos-treino.csv">Estatísticas de gastos no treino</a> · <a href="https://github.com/henriquessm/ann-dl">Repositório público</a>.</p>
+<p>Colaboração com IA: apoio na implementação, visualização e redação. Resultados obtidos por execução do código disponibilizado, sem treinamento de modelos.</p>
+</section>
+<section id="resumo">
+<h2>Resumo dos resultados</h2>
+<p>Índice dos 13 resultados solicitados. As distâncias de centros dos datasets I e II usam as médias amostrais em cinco dimensões.</p>
+<div class="table-scroll" tabindex="0" role="region" aria-label="Tabela de resultados"><table><thead><tr><th scope="col">#</th><th scope="col">Item</th><th scope="col">Seu valor</th></tr></thead><tbody><tr><td>1</td><td>Taxa de mistura em s = 0,5</td><td>0,00%</td></tr><tr><td>2</td><td>Taxa de mistura em s = 1,0</td><td>6,75%</td></tr><tr><td>3</td><td>Taxa de mistura em s = 2,0</td><td>22,50%</td></tr><tr><td>4</td><td>Taxa de mistura em s = 4,0</td><td>41,75%</td></tr><tr><td>5</td><td>Menor rᵢⱼ em s = 1,0 e par</td><td>1,3258; par 0–1</td></tr><tr><td>6</td><td>Distância entre os centros — Dataset I</td><td>3,3316</td></tr><tr><td>7</td><td>Distância entre os centros — Dataset II</td><td>0,2347</td></tr><tr><td>8</td><td>Variância explicada PC1 + PC2 — Dataset I</td><td>67,30%</td></tr><tr><td>9</td><td>Variância explicada PC1 + PC2 — Dataset II</td><td>43,10%</td></tr><tr><td>10</td><td>Proporção positiva em Transported</td><td>50,36% (4.378 / 8.693)</td></tr><tr><td>11</td><td>Média e mediana de FoodCourt no treino, antes da transformação</td><td>445,9940 e 0,00</td></tr><tr><td>12</td><td>Shape final das features de treino</td><td>(6954, 21)</td></tr><tr><td>13</td><td>Mínimo e máximo após escalonamento</td><td>Treino: −1,0000 e 1,0000; teste: −1,0000 e 1,0000</td></tr></tbody></table></div>
+</section>
+</main>
+</body>
+</html>

@@ -1,0 +1,236 @@
+{
+  "original_overlap_pairs": [
+    "0–1",
+    "1–2"
+  ],
+  "mixture": {
+    "0.5": 0.0,
+    "1.0": 0.0675,
+    "2.0": 0.225,
+    "4.0": 0.4175
+  },
+  "overlap_pairs": {
+    "0.5": [],
+    "1.0": [
+      "0–1",
+      "1–2"
+    ],
+    "2.0": [
+      "0–1",
+      "0–2",
+      "1–2"
+    ],
+    "4.0": [
+      "0–1",
+      "0–2",
+      "0–3",
+      "1–2",
+      "1–3",
+      "2–3"
+    ]
+  },
+  "separation": [
+    {
+      "par": "0–1",
+      "r": 1.3258252147247767
+    },
+    {
+      "par": "0–2",
+      "r": 2.4802177726810823
+    },
+    {
+      "par": "0–3",
+      "r": 4.496001658760448
+    },
+    {
+      "par": "1–2",
+      "r": 2.37998036524298
+    },
+    {
+      "par": "1–3",
+      "r": 3.6421567954234177
+    },
+    {
+      "par": "2–3",
+      "r": 3.5422200492390274
+    }
+  ],
+  "dataset_1": {
+    "center_distance": 3.331633541823365,
+    "explained_variance": [
+      0.5132219491167088,
+      0.15981499410481553
+    ],
+    "radius_ranges": [
+      [
+        0.422791755181744,
+        4.79679054110282
+      ],
+      [
+        1.2624745357329725,
+        7.500714842458767
+      ]
+    ]
+  },
+  "dataset_2": {
+    "center_distance": 0.23474446130286902,
+    "explained_variance": [
+      0.21635296563587159,
+      0.2146628292050688
+    ],
+    "radius_ranges": [
+      [
+        0.8500736267511828,
+        3.6604965588158405
+      ],
+      [
+        3.9533001580176954,
+        6.02053958144844
+      ]
+    ]
+  },
+  "radial_rule_errors": 1,
+  "radial_rule_3_8_errors": 0,
+  "real": {
+    "sha256": "17336d553f49ebdf6ecb266d2b5d3746e5dd308445f7c7864141c4f28d2a88d0",
+    "n": 8693,
+    "positive": 4378,
+    "negative": 4315,
+    "positive_fraction": 0.5036236051995858,
+    "train_positive": 3502,
+    "test_positive": 876,
+    "foodcourt_train": {
+      "mean": 445.9939820930574,
+      "median": 0.0,
+      "max": 29813.0
+    },
+    "shape_train": [
+      6954,
+      21
+    ],
+    "shape_test": [
+      1739,
+      21
+    ],
+    "range_train": [
+      -1.0,
+      1.0
+    ],
+    "range_test": [
+      -1.0,
+      1.0
+    ],
+    "nan_train": 0,
+    "nan_test": 0,
+    "clip_cells": 1,
+    "clip_rows": 1,
+    "clip_by_feature": {
+      "Age": 0,
+      "RoomService": 1,
+      "FoodCourt": 0,
+      "ShoppingMall": 0,
+      "Spa": 0,
+      "VRDeck": 0,
+      "TotalSpend": 0
+    },
+    "medians": {
+      "Age": 27.0,
+      "RoomService": 0.0,
+      "FoodCourt": 0.0,
+      "ShoppingMall": 0.0,
+      "Spa": 0.0,
+      "VRDeck": 0.0
+    },
+    "features": [
+      "Age",
+      "RoomService",
+      "FoodCourt",
+      "ShoppingMall",
+      "Spa",
+      "VRDeck",
+      "TotalSpend",
+      "HomePlanet_Ausente",
+      "HomePlanet_Earth",
+      "HomePlanet_Europa",
+      "HomePlanet_Mars",
+      "CryoSleep_Ausente",
+      "CryoSleep_False",
+      "CryoSleep_True",
+      "Destination_55 Cancri e",
+      "Destination_Ausente",
+      "Destination_PSO J318.5-22",
+      "Destination_TRAPPIST-1e",
+      "VIP_Ausente",
+      "VIP_False",
+      "VIP_True"
+    ],
+    "categories": {
+      "HomePlanet": [
+        "Ausente",
+        "Earth",
+        "Europa",
+        "Mars"
+      ],
+      "CryoSleep": [
+        "Ausente",
+        "False",
+        "True"
+      ],
+      "Destination": [
+        "55 Cancri e",
+        "Ausente",
+        "PSO J318.5-22",
+        "TRAPPIST-1e"
+      ],
+      "VIP": [
+        "Ausente",
+        "False",
+        "True"
+      ]
+    },
+    "numeric_ranges": {
+      "Age": {
+        "train_min": -1.0,
+        "train_max": 1.0,
+        "test_min": -1.0,
+        "test_max": 0.9746835443037973
+      },
+      "RoomService": {
+        "train_min": -1.0,
+        "train_max": 1.0,
+        "test_min": -1.0,
+        "test_max": 1.0
+      },
+      "FoodCourt": {
+        "train_min": -1.0,
+        "train_max": 1.0,
+        "test_min": -1.0,
+        "test_max": 0.9858911969771402
+      },
+      "ShoppingMall": {
+        "train_min": -1.0,
+        "train_max": 1.0,
+        "test_min": -1.0,
+        "test_max": 0.8706636553822686
+      },
+      "Spa": {
+        "train_min": -1.0,
+        "train_max": 1.0,
+        "test_min": -1.0,
+        "test_max": 0.9344804110460607
+      },
+      "VRDeck": {
+        "train_min": -1.0,
+        "train_max": 1.0,
+        "test_min": -1.0,
+        "test_max": 0.9341000552146017
+      },
+      "TotalSpend": {
+        "train_min": -1.0,
+        "train_max": 1.0,
+        "test_min": -1.0,
+        "test_max": 0.9720173977611566
+      }
+    }
+  }
+}
