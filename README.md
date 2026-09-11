@@ -10,9 +10,9 @@ Com Python 3.13, a partir da raiz:
 
 ```sh
 python -m pip install -r requirements.txt
-python scripts/analyze.py
-python scripts/build_report.py
-python scripts/build_site.py
+python ../../scripts/analyze.py
+python ../../scripts/build_report.py
+python ../../scripts/build_site.py
 python -m http.server 8000 --directory _site
 ```
 
@@ -21,14 +21,14 @@ Abra http://localhost:8000. O mesmo objeto `np.random.default_rng(42)` é usado 
 ## Estrutura
 
 - `index.html`: relatório, com front matter e seções na ordem da atividade.
-- `_layouts/default.html` e `assets/style.css`: apresentação responsiva.
-- `assets/figures/`: seis figuras solicitadas.
-- `scripts/analyze.py`: geração, análise, pré-processamento e verificações.
-- `scripts/build_report.py`: insere números calculados no relatório.
-- `scripts/build_site.py`: gera `_site/` para publicação estática.
-- `results/metrics.json`: todos os números e parâmetros reportados.
-- `results/features.npz`: matrizes, alvos, índices originais e nomes das features.
-- `results/*.csv`: tabelas descritivas.
+- `_layouts/default.html` e `../../assets/style.css`: apresentação responsiva.
+- `../../assets/figures/`: seis figuras solicitadas.
+- `../../scripts/analyze.py`: geração, análise, pré-processamento e verificações.
+- `../../scripts/build_report.py`: insere números calculados no relatório.
+- `../../scripts/build_site.py`: gera `_site/` para publicação estática.
+- `../../results/metrics.json`: todos os números e parâmetros reportados.
+- `../../results/features.npz`: matrizes, alvos, índices originais e nomes das features.
+- `../../results/*.csv`: tabelas descritivas.
 - `data/train.csv`: arquivo analisado; origem em `data/README.md`.
 - `.github/workflows/pages.yml`: publicação pelo GitHub Actions.
 
