@@ -2,8 +2,8 @@
 from pathlib import Path
 import shutil
 ROOT=Path(__file__).resolve().parents[1]
-DEST=ROOT/'_site'
-DEST.mkdir(exist_ok=True)
+DEST = ROOT / '_site' / 'exercises' / 'data'
+DEST.mkdir(parents=True, exist_ok=True)
 source=(ROOT/'index.html').read_text(encoding='utf-8')
 assert source.startswith('---\n')
 _,front,content=source.split('---',2)
