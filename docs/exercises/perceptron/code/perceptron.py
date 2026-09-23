@@ -18,12 +18,11 @@ HERE = Path(__file__).resolve().parent
 FIG = HERE.parent / "figures"
 FIG.mkdir(exist_ok=True)
 
-rng = np.random.default_rng(42)  # semente fixa, mesmo rng em todo o relatório
+rng = np.random.default_rng(42)
 ETA, MAX_EPOCHS = 0.01, 100
 COLORS = {0: "#2a78d6", 1: "#eb6834"}  # classe 0 azul, classe 1 laranja
 
 
-# ---------------------------------------------------------------- dados
 def make_data(mean0, mean1, cov, n=1000):
     """Duas classes gaussianas 2D com n amostras cada; rótulos 0 e 1."""
     x0 = rng.multivariate_normal(mean0, cov, size=n)
@@ -33,7 +32,6 @@ def make_data(mean0, mean1, cov, n=1000):
     return X, y
 
 
-# ------------------------------------------------------------ perceptron
 def step(z):
     """Ativação degrau: 1 se z >= 0, 0 caso contrário."""
     return (z >= 0).astype(int)
@@ -63,20 +61,20 @@ def train(X, y, eta=ETA, max_epochs=MAX_EPOCHS, w0=None, b0=0.0):
     epochs = 0
     for epoch in range(1, max_epochs + 1):
         n_updates = 0
-        for xi, yi in zip(X, y):  # ordem fixa do dataset, sem embaralhar
-            err = yi - step(xi @ w + b)  # 0 (acerto), +1 ou -1 (erro)
+        for xi, yi in zip(X, y):
+            err = yi - step(xi @ w + b)
             if err != 0:
                 w = w + eta * err * xi
                 b = b + eta * err
                 n_updates += 1
-                acc = accuracy(X, y, w, b)  # pocket: guarda o melhor até agora
+                acc = accuracy(X, y, w, b)
                 if acc > pocket["acc"]:
                     pocket = {"w": w.copy(), "b": b, "acc": acc, "epoch": epoch}
         epochs = epoch
         acc_epoch.append(accuracy(X, y, w, b))
         best_epoch.append(pocket["acc"])
         updates_epoch.append(n_updates)
-        if n_updates == 0:  # passada completa sem erro: convergiu
+        if n_updates == 0:
             break
     return {
         "w": w, "b": b, "epochs": epochs, "acc": acc_epoch[-1],
@@ -85,7 +83,6 @@ def train(X, y, eta=ETA, max_epochs=MAX_EPOCHS, w0=None, b0=0.0):
     }
 
 
-# --------------------------------------------------------------- figuras
 def scatter(ax, X, y):
     for c in (0, 1):
         m = y == c
@@ -155,14 +152,12 @@ def summary(r):
             "updates_epoch": r["updates_epoch"], "acc_epoch": r["acc_epoch"]}
 
 
-# --------------------------------------------------------------- execução
 if __name__ == "__main__":
     out = {}
 
-    # Exercício 1 — dados separáveis
     X1, y1 = make_data([1.5, 1.5], [5, 5], [[0.5, 0], [0, 0.5]])
     fig_scatter(1, X1, y1, "Figura 1 — Dados separáveis (1000 pontos por classe)")
-    w0 = rng.normal(0, 0.01, size=2)  # mesma inicialização para as duas taxas
+    w0 = rng.normal(0, 0.01, size=2)
     r1 = train(X1, y1, eta=0.01, w0=w0)
     r1b = train(X1, y1, eta=1.0, w0=w0)
     fig_boundary(2, X1, y1,
@@ -170,7 +165,6 @@ if __name__ == "__main__":
                  "Figura 2 — Fronteira de decisão, dados separáveis")
     fig_curve(3, [(r1["acc_epoch"], "Acurácia por época (η = 0,01)", {"c": COLORS[0], "marker": "o"})],
               "Figura 3 — Acurácia × época, dados separáveis")
-    # Item D: partida em zero com as duas taxas, para conferir a álgebra
     z1 = train(X1, y1, eta=0.01, w0=[0, 0])
     z2 = train(X1, y1, eta=1.0, w0=[0, 0])
     out["ex1"] = {
@@ -179,7 +173,6 @@ if __name__ == "__main__":
                        "ratio_w": (z2["w"] / z1["w"]).tolist(), "ratio_b": z2["b"] / z1["b"]},
     }
 
-    # Exercício 2 — dados sobrepostos, mesma implementação
     X2, y2 = make_data([3, 3], [4, 4], [[1.5, 0], [0, 1.5]])
     fig_scatter(4, X2, y2, "Figura 4 — Dados sobrepostos (1000 pontos por classe)")
     r2 = train(X2, y2)
