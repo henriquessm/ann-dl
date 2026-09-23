@@ -18,16 +18,6 @@ rendered=layout.replace('{{ page.title }}',html.escape(title)).replace('{{ conte
 for folder in ['assets','results','scripts']:
     shutil.copytree(ROOT/folder,DEST/folder,dirs_exist_ok=True)
 shutil.copy2(ROOT/'requirements.txt',DEST/'requirements.txt')
-(DEST/'index.html').write_text('''<!doctype html>
-<html lang="pt-BR">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta http-equiv="refresh" content="0; url=exercises/data/">
-  <title>Relatório de análise de dados</title>
-</head>
-<body><p><a href="exercises/data/">Abrir o relatório de análise de dados</a></p></body>
-</html>
-''', encoding='utf-8', newline='\n')
+# A página inicial do site agora é gerada pelo MkDocs (docs/index.md).
 (DEST/'.nojekyll').write_text('', encoding='utf-8')
 print('Site pronto em _site/exercises/data/index.html')

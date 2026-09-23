@@ -1,4 +1,36 @@
-# Preparação e análise de dados para redes neurais
+# ann-dl — entregas de Redes Neurais e Deep Learning
+
+Site: https://henriquessm.github.io/ann-dl/
+
+| Exercício | Relatório | Código |
+|---|---|---|
+| Dados | https://henriquessm.github.io/ann-dl/exercises/data/ | `scripts/analyze.py` |
+| Perceptron | https://henriquessm.github.io/ann-dl/exercises/perceptron/ | `docs/exercises/perceptron/code/perceptron.py` |
+
+## Site (MkDocs + Material)
+
+A partir da raiz, com as dependências de `requirements.txt` instaladas:
+
+```sh
+python -m mkdocs build --strict --site-dir _site   # páginas em docs/
+python scripts/build_report.py                      # relatório de dados (formato anterior)
+python scripts/build_site.py                        # copia o relatório de dados para _site/exercises/data/
+python -m http.server 8000 --directory _site
+```
+
+O relatório de dados foi entregue antes da adoção do MkDocs e mantém seu próprio HTML e pipeline; o workflow em `.github/workflows/pages.yml` executa os três comandos acima e publica `_site` inteira.
+
+## Perceptron
+
+```sh
+python docs/exercises/perceptron/code/perceptron.py
+```
+
+Gera `docs/exercises/perceptron/figures/fig1.png` a `fig6.png` e `docs/exercises/perceptron/code/results.json` com todos os números do relatório. Um único `np.random.default_rng(42)` é usado do início ao fim; execute o script inteiro.
+
+---
+
+# Preparação e análise de dados para redes neurais (entrega anterior)
 
 Relatório acadêmico com três exercícios, seis figuras e código reproduzível, sem treinamento de modelos.
 

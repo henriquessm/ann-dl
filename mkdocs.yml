@@ -1,0 +1,52 @@
+site_name: ann-dl · Henrique Mayor
+site_url: https://henriquessm.github.io/ann-dl/
+repo_url: https://github.com/henriquessm/ann-dl
+repo_name: henriquessm/ann-dl
+site_description: Entregas de Redes Neurais e Deep Learning (Insper, 2026.2)
+
+theme:
+  name: material
+  language: pt-BR
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: grey
+      toggle:
+        icon: material/toggle-switch-off-outline
+        name: Modo escuro
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: grey
+      toggle:
+        icon: material/toggle-switch
+        name: Modo claro
+  features:
+    - content.code.copy
+    - navigation.top
+    - navigation.expand
+    - toc.integrate
+
+markdown_extensions:
+  - admonition
+  - attr_list
+  - md_in_html
+  - tables
+  - toc:
+      permalink: true
+  - pymdownx.arithmatex:
+      generic: true
+  - pymdownx.details
+  - pymdownx.highlight:
+      anchor_linenums: true
+  - pymdownx.snippets
+  - pymdownx.superfences
+
+extra_javascript:
+  - javascripts/mathjax.js
+  - https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js
+
+nav:
+  - Início: index.md
+  - Exercícios:
+    - Dados: https://henriquessm.github.io/ann-dl/exercises/data/
+    - Perceptron: exercises/perceptron/index.md
